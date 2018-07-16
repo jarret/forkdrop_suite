@@ -93,14 +93,14 @@ def scriptpubkey2dict(scriptPubKey):
     if s[0]['opcode'] == "OP_HASH160":
         assert len(s) == 3, "unexpected script length"
         assert s[2]['opcode'] == 'OP_EQUAL', "unexpected scriptPubKey"
-        return {'type':    "P2PKH",
-                'address': str(CBase58Data.from_bytes(lx(s[1]['data']), 0))}
+        return {'type':    "P2SH_OR_PTPKWH",
+                'address': str(CBase58Data.from_bytes(lx(s[1]['data']), 5))}
     elif s[0]['opcode'] == 'OP_DUP':
         assert s[1]['opcode'] == 'OP_HASH160', "unexpected scriptPubKey"
         assert s[3]['opcode'] == 'OP_EQUALVERIFY', "unexpected scriptPubKey"
         assert s[4]['opcode'] == 'OP_CHECKSIG', "unexpected scriptPubKey"
-        return {'type':    "P2SH_OR_P2PKWH",
-                'address': str(CBase58Data.from_bytes(lx(s[2]['data']), 5))}
+        return {'type':    "P2PKH",
+                'address': str(CBase58Data.from_bytes(lx(s[2]['data']), 0))}
     else:
         assert False, "unexpected scriptPubKey"
 
