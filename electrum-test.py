@@ -19,40 +19,44 @@ from lib.electrum_query import ElectrumQuery
 
 from lib.stransaction import STransaction
 
-ELECTRUM = """electrum server url and port to connect to"""
+
+from lib.args import add_args, validate_args
+###############################################################################
+
 
 ###############################################################################
 
-def electrum_arg(parser):
-    parser.add_argument('-e', '--electrum', type=str, help=ELECTRUM)
+class ElectrumAddressInfo(object):
+    def __init__(self, settings, addr):
+        self.server = server
+        self.port = port
+        self.ssl = ssl
+        self.addr = addr
+        # TODO sanitize addres
+        CBase58Data(self.addr)
 
-def parse_electrum_arg(electrum):
-    if not electrum:
-        return
-    split = electrum.split(':')
-    if len(split) != 2:
-        sys.exit("invalid electrum server: %s" % electrum)
+        #eq = ElectrumQuery(self.server, self.port, ssl
 
-    s = electrum.split(':')[0]
-    p = int(electrum.split(':')[1])
-    return s, p
+    def _get_tx_block_map(self):
+        pass
 
 ###############################################################################
+
+ARGS = ['electrum_server', 'electrum_port', 'electrum_no_ssl',
+        'cache_requests', 'address_list', "not_tails"]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Pull down the current fork metadata from forkdrop.io")
-    not_tails_arg(parser)
-    electrum_arg(parser)
 
+    add_args(parser, ARGS)
     settings = parser.parse_args()
+    validate_args(settings, ARGS)
 
-    tails = not settings.not_tails
-    check_tails(tails)
-
-    s, p = parse_electrum_arg(settings.electrum)
-
-    eq = ElectrumQuery(s, p, ssl=True, tails=tails, cache=True)
+    eq = ElectrumQuery(settings.electrum_server, settings.electrum_port,
+                       ssl=(not settings.electrum_no_ssl),
+                       tails=(not settings.not_tails),
+                       cache=settings.cache_requests)
 
     q = eq.query("blockchain.address.listunspent",
                  "1MrpoVBweTnwPTase83S13LSZZ2Ga4Amk7")
@@ -62,6 +66,7 @@ if __name__ == '__main__':
     q = eq.query("blockchain.address.get_history",
                  "1MrpoVBweTnwPTase83S13LSZZ2Ga4Amk7")
     print(json.dumps(q, sort_keys=True, indent=1))
+
 
     for r in q['result']:
         #print(r['tx_hash'])
