@@ -8,7 +8,7 @@ import json
 
 import lib.third_party.socks as socks
 
-from lib.utl.print import print_red, chill_yellow_str
+from lib.utl.print import print_red, chill_yellow_str, chill_green_str
 from lib.utl.dir_manager import DirectoryManager
 from lib.utl.file_manager import FileManager
 
@@ -58,7 +58,10 @@ class ElectrumQuery(object):
                           "params": params}, sort_keys=True)
         qid = self._query_id_str(msg)
 
-        print("Electrum fetch: %s" % chill_yellow_str(qid))
+        if ".onion" in self.server:
+            print("Electrum fetch: %s" % chill_green_str(qid))
+        else:
+            print("Electrum fetch: %s" % chill_yellow_str(qid))
 
         if self.cache and self.dm.is_query_cached(qid):
             cache_file = self.dm.get_query_cache_path(qid)

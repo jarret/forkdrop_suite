@@ -52,6 +52,7 @@ def scriptpubkey2dict(scriptPubKey):
                 'address': str(CBase58Data.from_bytes(lx(s[2]['data']), 0))}
     else:
         assert False, "unexpected scriptPubKey"
+    # TODO bech32
 
 
 def ctxout2dict(ctxout):
@@ -83,8 +84,9 @@ class STransaction(object):
     """
     Wrapper class for CTransaction for accessing contained info that is needed
     for suite operations.  """
-    def __init__(self, rawhex):
+    def __init__(self, txid, rawhex):
         self.ct = CTransaction.deserialize(x(rawhex))
+        self.txid = txid
 
     def to_dict(self):
         d = {}
@@ -93,6 +95,7 @@ class STransaction(object):
         d['vin'] = [ctxin2dict(i) for i in self.ct.vin]
         d['vout'] = [ctxout2dict(o) for o in self.ct.vout]
         d['wit'] = ctxwitness2dict(self.ct.wit)
+        d['txid'] = self.txid
         return d
 
     def to_json(self):
@@ -101,14 +104,14 @@ class STransaction(object):
 
     def iter_ins(self):
         for i in self.ct.vin:
-            h = b2lx(i.prevout.hash)
+            txid = b2lx(i.prevout.hash)
             n = i.prevout.n
-            yield h, n
+            yield txid, n
 
     def iter_outs(self):
         n = 0
         for o in self.ct.vout:
-            a = ctxoutaddr(o)
-            v = o.nValue
-            yield a, v, n
+            addr = ctxoutaddr(o)
+            satoshis = o.nValue
+            yield addr, satoshis, n
             n = n + 1
