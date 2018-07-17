@@ -42,6 +42,15 @@ class ElectrumQuery(object):
     def _query_id_str(self, msg):
         return "%s:%s/%s" % (self.server, self.port, msg)
 
+    def _recv_line(self):
+        # electrum terminates response with a newline
+        data = b''
+        while True:
+            packet = self.socket.recv(RECV_MAX)
+            data += packet
+            if int(packet[-1]) == 10:
+                return data
+
     def query(self, method, params):
         params = [params] if type(params) is not list else params
         msg = json.dumps({"id":      0,
@@ -57,7 +66,8 @@ class ElectrumQuery(object):
 
         self._create_socket()
         self.socket.send(msg.encode() + b'\n')
-        response = json.loads(self.socket.recv(RECV_MAX)[:-1].decode())
+        msg = self._recv_line()
+        response = json.loads(msg.decode())
         self._destroy_socket()
         if self.cache:
             cache_file = self.dm.get_query_cache_path(qid)
